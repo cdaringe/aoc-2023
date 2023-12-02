@@ -15,6 +15,27 @@ pub type Game {
 type Draw =
   #(Int, Int, Int)
 
+pub fn pt_1(input: String) {
+  input
+  |> lines
+  |> list.map(game_of_line)
+  |> list.filter_map(fn(game) {
+    case list.all(game.draws, check_valid_draw) {
+      True -> Ok(game.id)
+      _ -> Error("invalid draws")
+    }
+  })
+  |> sum
+}
+
+pub fn pt_2(input: String) {
+  input
+  |> lines
+  |> list.map(game_of_line)
+  |> list.map(power)
+  |> sum
+}
+
 fn get_submatches(match: regex.Match) {
   option.values(match.submatches)
 }
@@ -78,19 +99,6 @@ fn check_valid_draw(draw: Draw) {
   draw.0 <= 12 && draw.1 <= 13 && draw.2 <= 14
 }
 
-pub fn pt_1(input: String) {
-  input
-  |> lines
-  |> list.map(game_of_line)
-  |> list.filter_map(fn(game) {
-    case list.all(game.draws, check_valid_draw) {
-      True -> Ok(game.id)
-      _ -> Error("invalid draws")
-    }
-  })
-  |> sum
-}
-
 fn power(game: Game) -> Int {
   let #(r, g, b) =
     list.fold(
@@ -103,13 +111,4 @@ fn power(game: Game) -> Int {
   r * g * b
 }
 
-pub fn pt_2(input: String) {
-  input
-  |> lines
-  |> list.map(fn(x) {
-    x
-    |> game_of_line
-    |> power
-  })
-  |> sum
-}
+
