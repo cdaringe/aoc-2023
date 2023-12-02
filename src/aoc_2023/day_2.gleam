@@ -110,5 +110,3 @@ fn power(game: Game) -> Int {
     )
   r * g * b
 }
-
-
