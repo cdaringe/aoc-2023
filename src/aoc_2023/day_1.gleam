@@ -3,43 +3,44 @@ import gleam/int
 import gleam/string
 import gleam/list
 import gleam/option.{None, Some}
+import aoc_2023/common.{lines}
+import aoc_2023/c/char.{is_digit}
 
-fn is_digit(c: String) {
-  case c {
-    "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0" -> True
-    _ -> False
-  }
+pub fn pt_1(input) {
+  input
+  |> lines
+  |> list.map(extract_code)
+  |> int.sum
+}
+
+pub fn pt_2(input) {
+  input
+  |> lines
+  |> list.map(normalize_textual_digits)
+  |> list.map(extract_code)
+  |> int.sum
 }
 
 pub fn extract_code(str: String) {
-  str
-  |> string.to_graphemes
-  |> list.fold(
-    #(None, None),
-    fn(acc, c) {
-      case acc, is_digit(c) {
-        _, False -> acc
-        #(None, _), _ -> #(Some(c), None)
-        #(f, _), _ -> #(f, Some(c))
-      }
-    },
-  )
-  |> fn(x) {
+  let extract_digit_char = fn(acc, c) {
+    case acc, is_digit(c) {
+      _, False -> acc
+      #(None, _), _ -> #(Some(c), None)
+      #(f, _), _ -> #(f, Some(c))
+    }
+  }
+  let parse_extracted = fn(x) {
     case x {
       #(Some(f), Some(l)) -> int.parse(f <> l)
       #(Some(f), None) -> int.parse(f <> f)
       _ -> Ok(0)
     }
   }
+  str
+  |> string.to_graphemes
+  |> list.fold(#(None, None), extract_digit_char)
+  |> parse_extracted
   |> result.unwrap(0)
-}
-
-pub fn pt_1(input: String) {
-  string.split(input, on: "\n")
-  |> list.filter(fn(x) { x != "" })
-  |> list.map(extract_code)
-  |> list.fold(0, fn(a, b) { a + b })
-  |> int.to_string
 }
 
 fn swap_text_digit_chars(buf) {
@@ -65,23 +66,9 @@ fn inline_text_digits(buf) {
   }
 }
 
-fn text_to_digits(str: String) -> String {
+fn normalize_textual_digits(str) {
   str
   |> string.to_graphemes
   |> inline_text_digits
   |> string.join("")
-}
-
-pub fn pt_2(input: String) {
-  string.split(input, on: "\n")
-  |> list.filter(fn(x) { x != "" })
-  |> list.map(
-    fn(x) {
-      x
-      |> text_to_digits
-      |> extract_code
-    },
-  )
-  |> list.fold(0, fn(a, b) { a + b })
-  |> int.to_string
 }
