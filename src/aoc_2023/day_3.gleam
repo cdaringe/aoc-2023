@@ -14,14 +14,11 @@ pub fn pt_1(input: String) {
     |> lines
     |> matrix.of_lines
 
-  matrix.find_chunks(grid, cchar.is_digit)
+  matrix.find_row_chunks(grid, cchar.is_digit)
   |> list.filter(fn(chunk) { matrix.is_chunk_adjacent_to(grid, chunk, is_sym) })
   |> list.map(chunk_to_int)
   |> int.sum
 }
-
-type ChunksByStarCoords =
-  map.Map(matrix.Coord, List(matrix.Chunk))
 
 pub fn pt_2(input: String) -> Int {
   let grid =
@@ -29,35 +26,23 @@ pub fn pt_2(input: String) -> Int {
     |> lines
     |> matrix.of_lines
 
-  let chunks_by_star =
-    list.fold(
-      matrix.find_chunks(grid, cchar.is_digit),
-      map.new(),
-      fn(chunks_by_star, chunk) {
-        case matrix.get_neighbor_if(grid, chunk, fn(it) { it == "*" }) {
-          [] -> chunks_by_star
-          star_coords ->
-            list.fold(
-              star_coords,
-              chunks_by_star,
-              fn(acc: ChunksByStarCoords, coord: matrix.Coord) {
-                map.update(
-                  in: acc,
-                  update: coord,
-                  with: fn(o) {
-                    case o {
-                      Some(chunks) -> [chunk, ..chunks]
-                      None -> [chunk]
-                    }
-                  },
-                )
-              },
-            )
+  let chunks_by_star_coord = {
+    let all_chunks = matrix.find_row_chunks(grid, cchar.is_digit)
+    use chunks_by_star_coord, chunk <- list.fold(all_chunks, map.new())
+    case matrix.get_neighbor_if(grid, chunk, is_star) {
+      [] -> chunks_by_star_coord
+      star_coords -> {
+        use acc, coord <- list.fold(star_coords, chunks_by_star_coord)
+        use maybe_chunks <- map.update(acc, coord)
+        case maybe_chunks {
+          Some(chunks) -> [chunk, ..chunks]
+          None -> [chunk]
         }
-      },
-    )
+      }
+    }
+  }
 
-  chunks_by_star
+  chunks_by_star_coord
   |> map.filter(fn(_, chunks) { list.length(chunks) == 2 })
   |> map.values
   |> list.map(fn(chunks) {
@@ -76,8 +61,12 @@ fn is_sym(c) {
   }
 }
 
-fn chunk_to_int(chunk: matrix.Chunk) {
+fn chunk_to_int(chunk: matrix.RowChunk) {
   list.map(chunk.0, cint.parse_int_exn)
   |> int.undigits(10)
   |> result.unwrap(0)
+}
+
+fn is_star(c: String) {
+  c == "*"
 }

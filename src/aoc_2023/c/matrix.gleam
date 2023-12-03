@@ -9,7 +9,8 @@ import gleam/set
 pub type Matrix =
   List(List(String))
 
-pub type Chunk =
+// A contiguous list of graphemes and their starting index
+pub type RowChunk =
   #(List(String), #(Int, Int))
 
 pub fn of_lines(lines: List(String)) -> Matrix {
@@ -59,7 +60,11 @@ const adjacency_dirs = [
   #(1, 1),
 ]
 
-pub fn is_chunk_adjacent_to(matrix: Matrix, chunk: Chunk, test: StrTest) -> Bool {
+pub fn is_chunk_adjacent_to(
+  matrix: Matrix,
+  chunk: RowChunk,
+  test: StrTest,
+) -> Bool {
   let #(y, x) = chunk.1
   use dxx <- list.any(list.index_map(chunk.0, fn(i, _) { i }))
   use dir <- list.any(adjacency_dirs)
@@ -72,7 +77,7 @@ pub fn is_chunk_adjacent_to(matrix: Matrix, chunk: Chunk, test: StrTest) -> Bool
 
 pub fn get_neighbor_if_(
   matrix: Matrix,
-  chunk: Chunk,
+  chunk: RowChunk,
   test: StrTest,
 ) -> List(Option(Coord)) {
   let #(y, x) = chunk.1
@@ -94,7 +99,7 @@ pub fn get_neighbor_if_(
 
 pub fn get_neighbor_if(
   matrix: Matrix,
-  chunk: Chunk,
+  chunk: RowChunk,
   test: StrTest,
 ) -> List(Coord) {
   let unique = set.new()
@@ -104,11 +109,11 @@ pub fn get_neighbor_if(
   |> set.to_list
 }
 
-type ChunkBuilder {
-  ChunkBuilder(partial: Option(Chunk), chunks: List(Chunk))
+type RowChunkBuilder {
+  RowChunkBuilder(partial: Option(RowChunk), chunks: List(RowChunk))
 }
 
-pub fn find_chunks(matrix: Matrix, test_in_chunk: StrTest) -> List(Chunk) {
+pub fn find_row_chunks(matrix: Matrix, test_in_chunk: StrTest) -> List(RowChunk) {
   let finalize_partial = fn(partial, chunks) {
     let #(chunk, #(y, x)) = partial
     [#(list.reverse(chunk), #(y, x)), ..chunks]
@@ -119,23 +124,23 @@ pub fn find_chunks(matrix: Matrix, test_in_chunk: StrTest) -> List(Chunk) {
       let state =
         list.index_fold(
           row,
-          ChunkBuilder(partial: None, chunks: []),
+          RowChunkBuilder(partial: None, chunks: []),
           fn(builder, c, x) {
             case builder.partial, test_in_chunk(c) {
-              None, False -> ChunkBuilder(None, builder.chunks)
+              None, False -> RowChunkBuilder(None, builder.chunks)
               None, True ->
-                ChunkBuilder(
+                RowChunkBuilder(
                   partial: Some(#([c], #(y, x))),
                   chunks: builder.chunks,
                 )
               Some(partial), False -> {
-                ChunkBuilder(
+                RowChunkBuilder(
                   partial: None,
                   chunks: finalize_partial(partial, builder.chunks),
                 )
               }
               Some(#(rest, #(y, x))), True ->
-                ChunkBuilder(
+                RowChunkBuilder(
                   partial: Some(#([c, ..rest], #(y, x))),
                   chunks: builder.chunks,
                 )
