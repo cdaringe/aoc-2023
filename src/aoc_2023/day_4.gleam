@@ -35,14 +35,14 @@ type Card {
 fn card_of_line(line: String) {
   let assert [p1, p2] =
     string.split(line, ":")
-    |> list.map(dempty)
+    |> list.map(normalize_line)
   let assert [_, id] = p1
   let assert [winning, has] =
     string.join(p2, " ")
     |> string.split("|")
     |> list.map(fn(s) {
       s
-      |> dempty
+      |> normalize_line
       |> list.map(parse_int_exn)
       |> set.from_list
     })
@@ -84,7 +84,7 @@ fn score2(cards: List(Card)) {
   list.index_fold(cards, 0, fn(total, _, i) { total + score_ith(i, cards) })
 }
 
-fn dempty(str: String) -> List(String) {
+fn normalize_line(str: String) -> List(String) {
   string.split(str, " ")
   |> list.map(string.trim)
   |> list.filter(fn(x) { x != "" })
