@@ -8,10 +8,3 @@ aoc in gleam.
 - run em: `gleam run -m gladvent run 1`
 
 See [available commands](https://github.com/tanklesxl/gladvent#available-commands).
-
-## todo
-
-- ❌ figure out how to destructure tuples
-- ❌ compose fns
-- tuple -> list
-- add testing files/pattern
