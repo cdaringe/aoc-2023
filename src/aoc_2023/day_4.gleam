@@ -1,4 +1,3 @@
-import gleam/map.{type Map}
 import gleam/set.{type Set}
 import gleam/list
 import gleam/int
@@ -7,7 +6,7 @@ import gleam/string
 import gleam/result
 import gleam/bool
 import aoc_2023/common
-import aoc_2023/c/int.{parse_int_exn} as cint
+import aoc_2023/c/int.{parse_int_exn} as _cint
 
 pub fn pt_1(input: String) {
   input
