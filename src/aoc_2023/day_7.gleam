@@ -13,7 +13,6 @@ pub fn pt_1(input: String) {
 }
 
 pub fn pt_2(input: String) {
-  // 249138943
   parse_hands(input, Joker)
   |> to_points
 }
@@ -145,9 +144,8 @@ fn parse_hands(text: String, jmode: JMode) {
       [2, 2, 1] -> TwoPair
       [2, 1, 1, 1] -> OnePair
       [1, 1, 1, 1, 1] -> HighCard
-      _ -> panic as "invalid layoud"
+      _ -> panic as "invalid layout"
     }
-
     Hand(typ: typ, cards: cards, bid: bid)
   })
 }
