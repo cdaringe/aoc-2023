@@ -1,39 +1,52 @@
 import gleam/list
-import gleam/bool
 import gleam/string
 import gleam/map
-import gleam/set
 import gleam/order
-import gleam/result
 import gleam/int
-import gleam/io
-import gleam/iterator as iter
-import gleam/option.{type Option, None, Some}
 import aoc_2023/common
 import aoc_2023/c/int as cint
 import aoc_2023/c/map as cmap
 
 pub fn pt_1(input: String) {
-  parse_hands(input)
+  parse_hands(input, Jack)
+  |> to_points
+}
+
+pub fn pt_2(input: String) {
+  // 249138943
+  parse_hands(input, Joker)
+  |> to_points
+}
+
+fn to_points(hands) {
+  hands
   |> list.sort(compare_hand)
   |> list.index_map(fn(i, hand: Hand) { hand.bid * { i + 1 } })
   |> list.fold(0, int.add)
 }
 
-pub fn pt_2(input: String) {
-  todo
+type JMode {
+  Jack
+  Joker
 }
 
 type Card {
   Card(value: Int, sym: String)
 }
 
-fn card_of_char(char: String) -> Card {
+fn card_of_char(char: String, jmode: JMode) -> Card {
   case char {
     "A" -> Card(value: 14, sym: char)
     "K" -> Card(value: 13, sym: char)
     "Q" -> Card(value: 12, sym: char)
-    "J" -> Card(value: 11, sym: char)
+    "J" ->
+      Card(
+        value: case jmode {
+          Jack -> 11
+          Joker -> 0
+        },
+        sym: char,
+      )
     "T" -> Card(value: 10, sym: char)
     "9" -> Card(value: 9, sym: char)
     "8" -> Card(value: 8, sym: char)
@@ -48,25 +61,13 @@ fn card_of_char(char: String) -> Card {
 }
 
 type HandType {
-  // Five of a kind, where all five cards have the same label: AAAAA
-  FiveOfKind(char: String)
-  // Four of a kind, where four cards have the same label and one card has a different label: AA8AA
-  FourOfKind(cards_4: String, cards_1: String)
-
-  // Full house, where three cards have the same label, and the remaining two cards share a different label: 23332
-  FullHouse(char_3: String, char_2: String)
-
-  // Three of a kind, where three cards have the same label, and the remaining two cards are each different from any other card in the hand: TTT98
-  ThreeOfKind(char_3: String, x: String, y: String)
-
-  // Two pair, where two cards share one label, two other cards share a second label, and the remaining card has a third label: 23432
-  TwoPair(p1: String, p2: String, x: String)
-
-  // One pair, where two cards share one label, and the other three cards have a different label from the pair and each other: A23A4
-  OnePair(p1: String, x: String, y: String, z: String)
-
-  // High card, where all cards' labels are distinct: 23456
-  HighCard(desc: #(String, String, String, String, String))
+  FiveOfKind
+  FourOfKind
+  FullHouse
+  ThreeOfKind
+  TwoPair
+  OnePair
+  HighCard
 }
 
 fn strength_of_hand_type(ht: HandType) {
@@ -86,31 +87,30 @@ type Hand {
 }
 
 fn compare_hand(a: Hand, b: Hand) {
-  let htyp_order =
-    int.compare(strength_of_hand_type(a.typ), strength_of_hand_type(b.typ))
-  case htyp_order {
+  let a_strength = strength_of_hand_type(a.typ)
+  let b_strength = strength_of_hand_type(b.typ)
+  let typ_order = int.compare(a_strength, b_strength)
+  case typ_order {
+    // case: hand types don't settle, drop to card strength
     order.Eq -> {
       list.zip(a.cards, b.cards)
-      |> list.find_map(fn(pair: #(Card, Card)) -> Result(order.Order, Nil) {
-        let v1 = pair.0
-        let v2 = pair.1
-        let card_rel_strength = int.compare(v1.value, v2.value)
-        case card_rel_strength {
+      |> list.find_map(fn(pair: #(Card, Card)) {
+        case int.compare({ pair.0 }.value, { pair.1 }.value) {
           order.Eq -> Error(Nil)
-          _ -> Ok(card_rel_strength)
+          ord -> Ok(ord)
         }
       })
-      |> result.unwrap(order.Eq)
+      |> common.expect("unbreakable tie")
     }
-    _ -> htyp_order
+    _ -> typ_order
   }
 }
 
-type OrderedCard {
-  OrderedCard(card: Card, pos: Int)
+type CardCount {
+  CC(card: Card, count: Int)
 }
 
-fn parse_hands(text: String) {
+fn parse_hands(text: String, jmode: JMode) {
   text
   |> common.lines
   |> list.map(fn(line) {
@@ -118,66 +118,45 @@ fn parse_hands(text: String) {
     let bid = cint.parse_int_exn(bid_str)
     let cards =
       string.split(chars_str, "")
-      |> list.map(card_of_char)
-    let ordered_cards =
-      cards
-      |> list.index_map(fn(pos, card) { OrderedCard(card: card, pos: pos) })
-      |> list.sort(fn(a, b) { int.compare(a.pos, b.pos) })
-    let card_values_set =
-      ordered_cards
-      |> list.map(fn(oc) { oc.card.value })
-      |> set.from_list
-    let set_len = set.size(card_values_set)
-    let assert Ok(card_0) = list.at(cards, 0)
-    use <- bool.guard(
-      set_len == 1,
-      Hand(typ: FiveOfKind(char: card_0.sym), cards: cards, bid: bid),
-    )
-    let cards_by_desc_occurence =
+      |> list.map(fn(c) { card_of_char(c, jmode) })
+
+    let desc_counts =
       list.fold(
         cards,
         map.new(),
         fn(n_by_card, card) { cmap.upsert(n_by_card, card, 1, fn(n) { n + 1 }) },
       )
       |> map.to_list
-      |> list.sort(fn(a, b) { int.compare(b.1, a.1) })
-    case cards_by_desc_occurence {
-      [#(a, 4), #(b, 1)] ->
-        Hand(
-          typ: FourOfKind(cards_4: a.sym, cards_1: b.sym),
-          cards: cards,
-          bid: bid,
-        )
-      [#(a, 3), #(b, 2)] ->
-        Hand(
-          typ: FullHouse(char_3: a.sym, char_2: b.sym),
-          cards: cards,
-          bid: bid,
-        )
-      [#(a, 3), #(b, 1), #(c, 1)] ->
-        Hand(
-          typ: ThreeOfKind(char_3: a.sym, x: b.sym, y: c.sym),
-          cards: cards,
-          bid: bid,
-        )
-      [#(a, 2), #(b, 2), #(c, 1)] ->
-        Hand(
-          typ: TwoPair(p1: a.sym, p2: b.sym, x: c.sym),
-          cards: cards,
-          bid: bid,
-        )
-      [#(a, 2), #(b, 1), #(c, 1), #(d, 1)] ->
-        Hand(
-          typ: OnePair(p1: a.sym, x: b.sym, y: c.sym, z: d.sym),
-          cards: cards,
-          bid: bid,
-        )
-      [#(a, 1), #(b, 1), #(c, 1), #(d, 1), #(e, 1)] ->
-        Hand(
-          typ: HighCard(desc: #(a.sym, b.sym, c.sym, d.sym, e.sym)),
-          cards: cards,
-          bid: bid,
-        )
+      |> list.map(fn(kv) { CC(card: kv.0, count: kv.1) })
+      |> list.sort(fn(a, b) { int.compare(b.count, a.count) })
+      |> fn(l) {
+        case jmode {
+          Joker -> jokerify(l)
+          _ -> l
+        }
+      }
+      |> list.map(fn(cc) { cc.count })
+
+    let typ = case desc_counts {
+      [5] -> FiveOfKind
+      [4, 1] -> FourOfKind
+      [3, 2] -> FullHouse
+      [3, 1, 1] -> ThreeOfKind
+      [2, 2, 1] -> TwoPair
+      [2, 1, 1, 1] -> OnePair
+      [1, 1, 1, 1, 1] -> HighCard
+      _ -> panic as "invalid layoud"
     }
+
+    Hand(typ: typ, cards: cards, bid: bid)
   })
+}
+
+fn jokerify(sorted: List(CardCount)) {
+  case list.pop(sorted, fn(cc) { cc.card.sym == "J" }) {
+    Ok(#(jcc, [a, ..rest])) -> {
+      [CC(a.card, a.count + jcc.count), ..rest]
+    }
+    _ -> sorted
+  }
 }
