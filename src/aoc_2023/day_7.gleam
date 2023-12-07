@@ -109,45 +109,42 @@ type CardCount {
   CC(card: Card, count: Int)
 }
 
-fn parse_hands(text: String, jmode: JMode) {
-  text
-  |> common.lines
-  |> list.map(fn(line) {
-    let assert [chars_str, bid_str] = string.split(line, " ")
-    let bid = cint.parse_int_exn(bid_str)
-    let cards =
-      string.split(chars_str, "")
-      |> list.map(fn(c) { card_of_char(c, jmode) })
+fn parse_hands(text: String, jmode: JMode) -> List(Hand) {
+  use line <- list.map(common.lines(text))
+  let assert [chars_str, bid_str] = string.split(line, " ")
+  let bid = cint.parse_int_exn(bid_str)
+  let cards =
+    string.split(chars_str, "")
+    |> list.map(fn(c) { card_of_char(c, jmode) })
 
-    let desc_counts =
-      list.fold(
-        cards,
-        map.new(),
-        fn(n_by_card, card) { cmap.upsert(n_by_card, card, 1, fn(n) { n + 1 }) },
-      )
-      |> map.to_list
-      |> list.map(fn(kv) { CC(card: kv.0, count: kv.1) })
-      |> list.sort(fn(a, b) { int.compare(b.count, a.count) })
-      |> fn(l) {
-        case jmode {
-          Joker -> jokerify(l)
-          _ -> l
-        }
+  let desc_counts =
+    list.fold(
+      cards,
+      map.new(),
+      fn(n_by_card, card) { cmap.upsert(n_by_card, card, 1, fn(n) { n + 1 }) },
+    )
+    |> map.to_list
+    |> list.map(fn(kv) { CC(card: kv.0, count: kv.1) })
+    |> list.sort(fn(a, b) { int.compare(b.count, a.count) })
+    |> fn(l) {
+      case jmode {
+        Joker -> jokerify(l)
+        _ -> l
       }
-      |> list.map(fn(cc) { cc.count })
-
-    let typ = case desc_counts {
-      [5] -> FiveOfKind
-      [4, 1] -> FourOfKind
-      [3, 2] -> FullHouse
-      [3, 1, 1] -> ThreeOfKind
-      [2, 2, 1] -> TwoPair
-      [2, 1, 1, 1] -> OnePair
-      [1, 1, 1, 1, 1] -> HighCard
-      _ -> panic as "invalid layout"
     }
-    Hand(typ: typ, cards: cards, bid: bid)
-  })
+    |> list.map(fn(cc) { cc.count })
+
+  let typ = case desc_counts {
+    [5] -> FiveOfKind
+    [4, 1] -> FourOfKind
+    [3, 2] -> FullHouse
+    [3, 1, 1] -> ThreeOfKind
+    [2, 2, 1] -> TwoPair
+    [2, 1, 1, 1] -> OnePair
+    [1, 1, 1, 1, 1] -> HighCard
+    _ -> panic as "invalid layout"
+  }
+  Hand(typ: typ, cards: cards, bid: bid)
 }
 
 fn jokerify(sorted: List(CardCount)) {
