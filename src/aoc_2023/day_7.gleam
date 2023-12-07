@@ -3,6 +3,8 @@ import gleam/bool
 import gleam/string
 import gleam/map
 import gleam/set
+import gleam/order
+import gleam/result
 import gleam/int
 import gleam/io
 import gleam/iterator as iter
@@ -13,7 +15,9 @@ import aoc_2023/c/map as cmap
 
 pub fn pt_1(input: String) {
   parse_hands(input)
-  |> list.length
+  |> list.sort(compare_hand)
+  |> list.index_map(fn(i, hand: Hand) { hand.bid * { i + 1 } })
+  |> list.fold(0, int.add)
 }
 
 pub fn pt_2(input: String) {
@@ -65,8 +69,41 @@ type HandType {
   HighCard(desc: #(String, String, String, String, String))
 }
 
+fn strength_of_hand_type(ht: HandType) {
+  case ht {
+    FiveOfKind(..) -> 7
+    FourOfKind(..) -> 6
+    FullHouse(..) -> 5
+    ThreeOfKind(..) -> 4
+    TwoPair(..) -> 3
+    OnePair(..) -> 2
+    HighCard(..) -> 1
+  }
+}
+
 type Hand {
   Hand(typ: HandType, cards: List(Card), bid: Int)
+}
+
+fn compare_hand(a: Hand, b: Hand) {
+  let htyp_order =
+    int.compare(strength_of_hand_type(a.typ), strength_of_hand_type(b.typ))
+  case htyp_order {
+    order.Eq -> {
+      list.zip(a.cards, b.cards)
+      |> list.find_map(fn(pair: #(Card, Card)) -> Result(order.Order, Nil) {
+        let v1 = pair.0
+        let v2 = pair.1
+        let card_rel_strength = int.compare(v1.value, v2.value)
+        case card_rel_strength {
+          order.Eq -> Error(Nil)
+          _ -> Ok(card_rel_strength)
+        }
+      })
+      |> result.unwrap(order.Eq)
+    }
+    _ -> htyp_order
+  }
 }
 
 type OrderedCard {
