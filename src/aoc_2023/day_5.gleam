@@ -10,7 +10,7 @@ import aoc_2023/c/int as cint
 
 pub fn pt_1(input: String) {
   let lines = common.lines(input)
-  let assert Ok(#(l1, rest)) = list.pop(lines, fn(x) { True })
+  let assert Ok(#(l1, rest)) = list.pop(lines, fn(_) { True })
   let seeds = parse_seed_line(l1)
   let maps_by_name: ResourceMapByFT =
     parse_map_lines(rest)
@@ -135,15 +135,6 @@ fn collect_resources(
 
 type Range {
   Range(src: Int, dest: Int, len: Int)
-}
-
-fn format_range(r: Range) {
-  [
-    "src: " <> int.to_string(r.src),
-    "dest: " <> int.to_string(r.dest),
-    "len: " <> int.to_string(r.len),
-  ]
-  |> string.join(", ")
 }
 
 type FromTo =

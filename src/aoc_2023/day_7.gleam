@@ -3,18 +3,19 @@ import gleam/string
 import gleam/map
 import gleam/order
 import gleam/int
-import aoc_2023/common
+import gleam/result
+import aoc_2023/common.{parse_err, swap_err}
 import aoc_2023/c/int as cint
 import aoc_2023/c/map as cmap
 
 pub fn pt_1(input: String) {
   parse_hands(input, Jack)
-  |> to_points
+  |> result.map(to_points)
 }
 
 pub fn pt_2(input: String) {
   parse_hands(input, Joker)
-  |> to_points
+  |> result.map(to_points)
 }
 
 fn to_points(hands) {
@@ -33,7 +34,7 @@ type Card {
   Card(value: Int, sym: String)
 }
 
-fn card_of_char(char: String, jmode: JMode) -> Card {
+fn card_of_char(char: String, jmode: JMode) -> Result(Card, Nil) {
   case char {
     "A" -> Card(value: 14, sym: char)
     "K" -> Card(value: 13, sym: char)
@@ -55,7 +56,13 @@ fn card_of_char(char: String, jmode: JMode) -> Card {
     "4" -> Card(value: 4, sym: char)
     "3" -> Card(value: 3, sym: char)
     "2" -> Card(value: 2, sym: char)
-    _ -> panic as "bad_char"
+    _ -> Card(value: -1, sym: "")
+  }
+  |> fn(c: Card) {
+    case c.value == -1 {
+      True -> Error(Nil)
+      _ -> Ok(c)
+    }
   }
 }
 
@@ -109,14 +116,26 @@ type CardCount {
   CC(card: Card, count: Int)
 }
 
-fn parse_hands(text: String, jmode: JMode) -> List(Hand) {
-  use line <- list.map(common.lines(text))
-  let assert [chars_str, bid_str] = string.split(line, " ")
-  let bid = cint.parse_int_exn(bid_str)
-  let cards =
-    string.split(chars_str, "")
-    |> list.map(fn(c) { card_of_char(c, jmode) })
+type ParseHandResult =
+  Result(List(Hand), common.AocError)
 
+fn parse_hands(text: String, jmode: JMode) -> ParseHandResult {
+  use line <- list.try_map(common.lines(text))
+  let split_line = case string.split(line, " ") {
+    [x, y] -> Ok(#(x, y))
+    _ -> Error(parse_err("bad delim " <> line))
+  }
+  use tup <- result.try(split_line)
+  let #(chars_str, bid_str) = tup
+  use bid <- result.try(
+    int.parse(bid_str)
+    |> swap_err(parse_err(line)),
+  )
+  use cards <- result.try(
+    string.split(chars_str, "")
+    |> list.try_map(fn(c) { card_of_char(c, jmode) })
+    |> swap_err(parse_err(chars_str)),
+  )
   let desc_counts =
     list.fold(
       cards,
@@ -133,7 +152,6 @@ fn parse_hands(text: String, jmode: JMode) -> List(Hand) {
       }
     }
     |> list.map(fn(cc) { cc.count })
-
   let typ = case desc_counts {
     [5] -> FiveOfKind
     [4, 1] -> FourOfKind
@@ -144,7 +162,7 @@ fn parse_hands(text: String, jmode: JMode) -> List(Hand) {
     [1, 1, 1, 1, 1] -> HighCard
     _ -> panic as "invalid layout"
   }
-  Hand(typ: typ, cards: cards, bid: bid)
+  Ok(Hand(typ: typ, cards: cards, bid: bid))
 }
 
 fn jokerify(sorted: List(CardCount)) {
