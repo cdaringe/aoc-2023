@@ -28,10 +28,6 @@ pub fn pt_1(input: String) {
   |> fn(state: State) { state.n }
 }
 
-pub type MState {
-  MState(n: Int, nodes: List(Node))
-}
-
 pub fn pt_2(input: String) {
   let #(dirs, nodes, network) = parse(input)
   let start_nodes = list.filter(nodes, fn(n) { string.ends_with(n.name, "A") })
