@@ -2,7 +2,6 @@ import aoc_2023/common
 import aoc_2023/c/int as cint
 import aoc_2023/c/list as clist
 import gleam/list
-import gleam/io
 import gleam/int
 import gleam/string
 
@@ -11,8 +10,7 @@ pub fn pt_1(input: String) {
   |> parse
   |> list.map(cascading_deltas)
   |> list.map(sum_lasts)
-  |> list.reduce(int.add)
-  |> common.expect("failed to sum")
+  |> int.sum
 }
 
 pub fn pt_2(input: String) {
@@ -22,8 +20,7 @@ pub fn pt_2(input: String) {
   |> list.map(cascading_deltas)
   |> list.map(delta_heads)
   |> list.map(clist.first_exn)
-  |> list.reduce(int.add)
-  |> common.expect("failed to sum")
+  |> int.sum
 }
 
 fn parse(text: String) -> List(List(Int)) {
@@ -54,8 +51,7 @@ pub fn cascading_deltas(xs: List(Int)) -> List(List(Int)) {
 fn sum_lasts(xxs: List(List(Int))) -> Int {
   xxs
   |> list.map(clist.last_exn)
-  |> list.reduce(int.add)
-  |> common.expect("unable to sum")
+  |> int.sum
 }
 
 fn delta_heads(xxs: List(List(Int))) {
@@ -69,7 +65,6 @@ fn delta_heads(xxs: List(List(Int))) {
         [] -> 0
         [last, ..] -> last
       }
-      io.debug(#(it - last, it, last))
       [it - last, ..acc]
     },
   )
