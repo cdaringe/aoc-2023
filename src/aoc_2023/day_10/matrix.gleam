@@ -54,7 +54,6 @@ pub fn find_cell(
       use <- bool.guard(when: result.is_ok(found), return: found)
       use found, val, ri <- list.index_fold(row, Error(Nil))
       use <- bool.guard(when: result.is_ok(found), return: found)
-      io.debug(#(ri, ry, val))
       case test_fn(val) {
         False -> Error(Nil)
         _ -> Ok(CoordVal(coord: Coord(y: ry, x: ri), val: val))

@@ -125,12 +125,10 @@ fn invert_dir(dir: Dir) {
 }
 
 fn can_connect(p1: CVP, p2: CVP) {
-  io.debug(#("connect_check?", p1.val, p2.val))
   let dir = get_dir(p1, p2)
   let m1 = has_mate(p1.val, dir)
   let m2 = has_mate(p2.val, invert_dir(dir))
   let ok = m1 && m2 && m1 == m2
-  io.debug(#(" ", ok, p1.val, dir, p2.val))
   ok
 }
 

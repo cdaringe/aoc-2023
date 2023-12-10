@@ -2,7 +2,6 @@ import aoc_2023/day_8/node.{type Node}
 import gleam/list
 import gleam/string
 import gleam/map
-import gleam/io
 
 pub type Network =
   map.Map(String, Node)
@@ -26,8 +25,6 @@ pub fn nav(node: Node, dir: Dir) {
 }
 
 pub fn get_node(n: Network, name: String) {
-  // io.debug(#("getting", name))
-  // io.debug(n)
   case map.get(n, name) {
     Ok(node) -> node
     _ -> panic as "invalid node"

@@ -39,8 +39,6 @@ pub fn pt_2(input: String) {
     |> list.map(max_of_ranges)
     |> list.fold(0, fn(max, it) { int.max(max, it) })
 
-  io.debug(#("max", max))
-  io.debug("preparse")
   let seq =
     parse_seed_line(l1)
     |> pairs
@@ -52,35 +50,22 @@ pub fn pt_2(input: String) {
       #(
         start,
         case exceeds_max {
-          True -> {
-            io.debug(#("truncated", upper - max))
-            len_to_max
-          }
-          _ -> {
-            io.debug(#("upper", upper, "is less than", max, "skipping"))
-            len
-          }
+          True -> len_to_max
+          _ -> len
         },
       )
     })
     |> list.sort(fn(a, b) { int.compare(a.0, b.0) })
-    |> list.map(fn(x) {
-      io.debug(#("start", x.0, "len", x.1, "upper", x.0 + x.1))
-      iter.range(x.0, x.0 + x.1)
-    })
+    |> list.map(fn(x) { iter.range(x.0, x.0 + x.1) })
     |> iter.from_list
     |> iter.flatten
-  io.debug("postseq")
   seq
   |> iter.fold(
     #(0, 999_999_999_999),
     fn(acc, seed) {
       let #(count, min) = acc
       case int.modulo(count, 1_000_000) {
-        Ok(0) -> {
-          io.debug(#("@count", count))
-          Nil
-        }
+        Ok(0) -> Nil
         _ -> Nil
       }
       #(count + 1, int.min(min, loc_of_seed(seed, maps_by_name)))
@@ -110,8 +95,6 @@ fn collect_resources(
       rm.ranges,
       fn(r) {
         let Range(src, dest, len) = r
-        // io.debug(value)
-        // io.debug(#(src, dest, len, from_to.1))
         case value >= src && value < { src + len } {
           True -> Ok(dest + { value - src })
           False -> Error(Nil)
