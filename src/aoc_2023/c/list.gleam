@@ -21,3 +21,10 @@ pub fn last_exn(x) {
     _ -> panic as "invalid end of list"
   }
 }
+
+pub fn with_window_2(els, map) {
+  case els {
+    [a, b] -> map(a, b)
+    _ -> panic as "invalid window"
+  }
+}

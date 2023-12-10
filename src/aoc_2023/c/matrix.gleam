@@ -18,10 +18,13 @@ pub fn of_lines(lines: List(String)) -> Matrix {
 }
 
 pub fn print(m: Matrix) {
-  list.each(m, fn(row) {
-    list.each(row, fn(c) { io.print(c <> " ") })
-    io.println("")
-  })
+  list.each(
+    m,
+    fn(row) {
+      list.each(row, fn(c) { io.print(c <> " ") })
+      io.println("")
+    },
+  )
 }
 
 type Coord =
@@ -115,38 +118,41 @@ pub fn find_row_chunks(matrix: Matrix, test_in_chunk: StrTest) -> List(RowChunk)
     let #(chunk, #(y, x)) = partial
     [#(list.reverse(chunk), #(y, x)), ..chunks]
   }
-  list.index_map(matrix, fn(y, row) {
-    let state =
-      list.index_fold(row, RowChunkBuilder(partial: None, chunks: []), fn(
-        builder,
-        c,
-        x,
-      ) {
-        case builder.partial, test_in_chunk(c) {
-          None, False -> RowChunkBuilder(None, builder.chunks)
-          None, True ->
-            RowChunkBuilder(
-              partial: Some(#([c], #(y, x))),
-              chunks: builder.chunks,
-            )
-          Some(partial), False -> {
-            RowChunkBuilder(
-              partial: None,
-              chunks: finalize_partial(partial, builder.chunks),
-            )
-          }
-          Some(#(rest, #(y, x))), True ->
-            RowChunkBuilder(
-              partial: Some(#([c, ..rest], #(y, x))),
-              chunks: builder.chunks,
-            )
-        }
-      })
-    case state.partial {
-      Some(partial) -> finalize_partial(partial, state.chunks)
-      _ -> state.chunks
-    }
-    |> list.reverse
-  })
+  list.index_map(
+    matrix,
+    fn(y, row) {
+      let state =
+        list.index_fold(
+          row,
+          RowChunkBuilder(partial: None, chunks: []),
+          fn(builder, c, x) {
+            case builder.partial, test_in_chunk(c) {
+              None, False -> RowChunkBuilder(None, builder.chunks)
+              None, True ->
+                RowChunkBuilder(
+                  partial: Some(#([c], #(y, x))),
+                  chunks: builder.chunks,
+                )
+              Some(partial), False -> {
+                RowChunkBuilder(
+                  partial: None,
+                  chunks: finalize_partial(partial, builder.chunks),
+                )
+              }
+              Some(#(rest, #(y, x))), True ->
+                RowChunkBuilder(
+                  partial: Some(#([c, ..rest], #(y, x))),
+                  chunks: builder.chunks,
+                )
+            }
+          },
+        )
+      case state.partial {
+        Some(partial) -> finalize_partial(partial, state.chunks)
+        _ -> state.chunks
+      }
+      |> list.reverse
+    },
+  )
   |> list.flatten
 }
