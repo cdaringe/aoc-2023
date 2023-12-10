@@ -92,7 +92,7 @@ fn get_dir(p1: CVP, p2: CVP) {
     _, 1 -> Down
     -1, _ -> Left
     _, -1 -> Up
-    _, _ -> panic
+    _, _ -> panic as "invalid dir"
   }
 }
 
