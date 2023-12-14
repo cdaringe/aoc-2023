@@ -60,22 +60,17 @@ fn solve_line(line: String) -> List(Candidate) {
 
 // [a,b,c,d] -> [ [[a,b,c,d]], [[a], [b,c,d]], [[a,b], [c,d], [[a,b,c], [d]]]
 pub fn all_splits(l: List(a)) -> List(List(List(a))) {
-  // let max_i = list.length(l) - 1
   list.index_fold(
     l,
     [],
     fn(acc: List(List(List(a))), _, i: Int) {
-      let res = case i == 0 {
+      case i == 0 {
         True -> acc
         False -> {
           let #(a, b) = list.split(l, i)
-          io.debug(#("split in", l, "at", i))
-          io.debug(#("split out", a, b))
-          let parts: List(List(a)) = [a, b]
-          [parts, ..acc]
+          [[a, b], ..acc]
         }
       }
-      res
     },
   )
 }
