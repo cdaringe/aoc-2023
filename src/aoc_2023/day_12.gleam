@@ -59,7 +59,10 @@ fn solve_line(line: String) -> List(Candidate) {
 }
 
 // [a,b,c,d] -> [ [[a,b,c,d]], [[a], [b,c,d]], [[a,b], [c,d], [[a,b,c], [d]]]
-pub fn all_splits(l: List(a)) -> List(List(List(a))) {
+pub fn all_splits(
+  l: List(a),
+  is_valid_split: fn(a, a) -> Bool,
+) -> List(List(List(a))) {
   list.index_fold(
     l,
     [],
@@ -68,7 +71,16 @@ pub fn all_splits(l: List(a)) -> List(List(List(a))) {
         True -> acc
         False -> {
           let #(a, b) = list.split(l, i)
-          [[a, b], ..acc]
+          let next = [[a, b], ..acc]
+          case list.last(a), list.first(b) {
+            Ok(x), Ok(y) -> {
+              case is_valid_split(x, y) {
+                True -> next
+                False -> acc
+              }
+            }
+            _, _ -> next
+          }
         }
       }
     },
@@ -87,6 +99,7 @@ fn find_all_broken_patterns(
   visited: Set(Candidate),
 ) -> FoundState {
   use <- bool.guard(set.contains(visited, candidate), #(visited, []))
+  io.debug(candidate)
   let group_len = list.length(candidate)
   let pat_len = list.length(brokepat)
   let visited = set.insert(visited, candidate)
@@ -133,7 +146,7 @@ pub fn generate_next_candidates(
   use <- bool.guard(list.length(g) <= 2, [])
   let #(a, b_inclusive) = list.split(candidate, i)
   let b = list.drop(b_inclusive, 1)
-  all_splits(g)
+  all_splits(g, fn(x, y) { x == "#" && y == "#" })
   |> list.map(fn(replacement_gs) { list.concat([a, replacement_gs, b]) })
 }
 
