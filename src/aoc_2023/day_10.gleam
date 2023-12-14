@@ -240,7 +240,6 @@ fn to_envpipe_loop(
   //   list.split_while(loop, fn(it) { it.coord == envpipe0.cv.coord })
   // let next_loop = list.append(subloops.1, subloops.0)
   // io.debug(#("next_loop", next_loop))
-  let
 
   let assert [cv0, ..rest] = loop
   let envpipe0 = EnvPipe(cv: cv0, env: Env(u: Out, l: Out, d: Unk, r: Unk))
