@@ -54,16 +54,16 @@ pub fn find_reflection(block: List(String)) -> Reflect {
   case find_col_reflection(rotated) {
     Ok(j) -> Row(j)
     _ -> {
-      list.map(block, io.println)
-      io.debug("brk")
-      list.map(rotated, io.println)
+      // list.map(block, io.println)
+      // io.debug("brk")
+      // list.map(rotated, io.println)
       panic as "bummer no reflections"
     }
   }
 }
 
 pub fn find_col_reflection(block: List(String)) -> Result(Int, Nil) {
-  iter.range(1, { list.length(block) - 2 })
+  iter.range(1, { list.length(block) - 1 })
   |> iter.find(fn(i) {
     list.all(block, fn(str) { has_reflection_string_at(str, i) })
   })
@@ -76,7 +76,16 @@ pub fn has_reflection_string_at(str: String, i: Int) -> Bool {
   let #(l, r) = list.split(chars, i)
   let ll = list.reverse(l)
   iter.zip(iter.from_list(ll), iter.from_list(r))
-  |> iter.all(fn(pair) { pair.0 == pair.1 })
+  |> iter.all(fn(pair) {
+    // case i {
+    //   10 -> {
+    //     io.debug(#(pair.0, pair.1))
+    //     Nil
+    //   }
+    //   _ -> Nil
+    // }
+    pair.0 == pair.1
+  })
 }
 
 fn col(matrix: List(List(a)), ith: Int) -> List(a) {
