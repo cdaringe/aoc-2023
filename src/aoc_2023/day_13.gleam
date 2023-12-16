@@ -22,8 +22,8 @@ fn score_reflections(reflections) -> Int {
   list.fold(
     reflections,
     #(0, 0),
-    fn(x, reflections) {
-      let #(rows, cols) = x
+    fn(acc, reflections) {
+      let #(rows, cols) = acc
       case reflections {
         [Col(c)] -> #(rows, cols + c)
         [Row(r)] -> #(rows + r, cols)
@@ -77,10 +77,9 @@ pub fn find_col_reflections(mirror_maze: List(List(String))) -> List(Int) {
   |> iter.to_list
 }
 
-pub fn has_reflection_string_at(row: List(String), i: Int) -> Bool {
+pub fn has_reflection_string_at(chars: List(String), i: Int) -> Bool {
   use <- bool.guard(i == 0, False)
-  use <- bool.guard({ list.length(row) - 1 } == 0, False)
-  let chars = row
+  use <- bool.guard({ list.length(chars) - 1 } == 0, False)
   let #(l, r) = list.split(chars, i)
   let ll = list.reverse(l)
   iter.zip(iter.from_list(ll), iter.from_list(r))
