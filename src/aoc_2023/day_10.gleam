@@ -1,6 +1,8 @@
 import aoc_2023/common
 import aoc_2023/c/pair
-import aoc_2023/day_10/matrix.{Coord, Dir, Down, Left, Matrix, Right, Up}
+import aoc_2023/day_10/matrix.{
+  type Coord, type Dir, Coord, Down, Left, Right, Up,
+}
 import gleam/list
 import gleam/string
 import gleam/bool

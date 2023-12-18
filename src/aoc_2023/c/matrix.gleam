@@ -5,6 +5,7 @@ import gleam/result
 import gleam/io
 import gleam/int
 import gleam/set
+import gleam/order.{Eq}
 
 pub type Matrix(a) =
   List(List(a))
@@ -158,4 +159,61 @@ pub fn find_row_chunks(
     },
   )
   |> list.flatten
+}
+
+pub fn map(mat: Matrix(a), with cb: fn(a, Int, Int) -> b) -> Matrix(b) {
+  use y, row <- list.index_map(mat)
+  use x, cell <- list.index_map(row)
+  cb(cell, y, x)
+}
+
+pub fn fold(mat: Matrix(a), init: b, with cb: fn(b, a, Int, Int) -> b) -> b {
+  use acc, row, y <- list.index_fold(mat, init)
+  use acc, cell, x <- list.index_fold(row, acc)
+  cb(acc, cell, y, x)
+}
+
+pub fn at(mat: Matrix(a), y: Int, x: Int) {
+  let maybe_row = list.at(mat, y)
+  let maybe_cell = result.try(maybe_row, fn(row) { list.at(row, x) })
+  maybe_cell
+}
+
+pub fn at_exn(mat: Matrix(a), y: Int, x: Int) {
+  case at(mat, y, x) {
+    Ok(v) -> v
+    Error(Nil) -> {
+      io.debug(#("failed to find cell at y, x", y, x))
+      panic
+    }
+  }
+}
+
+pub fn of_list(l: List(a), width: Int) -> Matrix(a) {
+  list.fold_right(
+    l,
+    [[]],
+    fn(acc, it) {
+      case acc {
+        [hd, ..rest] -> {
+          case list.length(hd) == width {
+            True -> [[it], ..acc]
+            False -> [[it, ..hd], ..rest]
+          }
+        }
+        _ -> panic
+      }
+    },
+  )
+}
+
+type YX =
+  #(Int, Int)
+
+pub fn compare_yx(a: YX, b: YX) -> order.Order {
+  let comp = int.compare(a.0, b.0)
+  case comp {
+    Eq -> int.compare(a.1, b.1)
+    _ -> comp
+  }
 }
