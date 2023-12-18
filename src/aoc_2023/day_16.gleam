@@ -1,13 +1,12 @@
 import gleam/list
 import gleam/int
 import gleam/bool
-import gleam/string
 import gleam/iterator.{concat, fold, map, range, repeat, zip}
 import gleam/map.{type Map}
 import gleam/set.{type Set}
 import gleam/result
 import aoc_2023/common
-import aoc_2023/c/matrix.{type Matrix}
+import aoc_2023/c/matrix
 import aoc_2023/c/list as clist
 
 pub fn pt_1(input: String) {
