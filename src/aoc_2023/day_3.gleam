@@ -61,7 +61,7 @@ fn is_sym(c) {
   }
 }
 
-fn chunk_to_int(chunk: matrix.RowChunk) {
+fn chunk_to_int(chunk: matrix.RowChunk(String)) {
   list.map(chunk.0, cint.parse_int_exn)
   |> int.undigits(10)
   |> result.unwrap(0)

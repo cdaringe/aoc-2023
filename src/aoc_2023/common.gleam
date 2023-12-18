@@ -8,6 +8,15 @@ pub fn lines(text: String) {
   |> list.filter(fn(x) { x != "" })
 }
 
+pub type CharMatrix =
+  List(List(String))
+
+pub fn char_matrix(text) -> CharMatrix {
+  text
+  |> lines
+  |> list.map(fn(row) { string.split(row, "") })
+}
+
 pub fn expect(r: Result(_, _), msg: String) {
   case r {
     Ok(v) -> v

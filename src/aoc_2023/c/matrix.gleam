@@ -6,22 +6,22 @@ import gleam/io
 import gleam/int
 import gleam/set
 
-pub type Matrix =
-  List(List(String))
+pub type Matrix(a) =
+  List(List(a))
 
 // A contiguous list of graphemes and their starting index
-pub type RowChunk =
-  #(List(String), #(Int, Int))
+pub type RowChunk(a) =
+  #(List(a), #(Int, Int))
 
-pub fn of_lines(lines: List(String)) -> Matrix {
+pub fn of_lines(lines: List(String)) -> Matrix(String) {
   list.map(lines, fn(line) { string.split(line, "") })
 }
 
-pub fn print(m: Matrix) {
+pub fn print(m: Matrix(a), pp) {
   list.each(
     m,
     fn(row) {
-      list.each(row, fn(c) { io.print(c <> " ") })
+      list.each(row, fn(c) { io.print(pp(c) <> " ") })
       io.println("")
     },
   )
@@ -38,10 +38,10 @@ pub fn print_coord(c: Coord) {
   io.println(coord_to_string(c))
 }
 
-type StrTest =
-  fn(String) -> Bool
+type StrTest(a) =
+  fn(a) -> Bool
 
-pub fn get_cell(matrix: Matrix, yx: #(Int, Int)) -> Option(String) {
+pub fn get_cell(matrix: Matrix(a), yx: #(Int, Int)) -> Option(a) {
   let #(y, x) = yx
   let maybe_row = list.at(matrix, y)
   let maybe_cell = result.try(maybe_row, fn(row) { list.at(row, x) })
@@ -61,9 +61,9 @@ const adjacency_dirs = [
 ]
 
 pub fn is_chunk_adjacent_to(
-  matrix: Matrix,
-  chunk: RowChunk,
-  test: StrTest,
+  matrix: Matrix(a),
+  chunk: RowChunk(a),
+  test: StrTest(a),
 ) -> Bool {
   let #(y, x) = chunk.1
   use dxx <- list.any(list.index_map(chunk.0, fn(i, _) { i }))
@@ -76,9 +76,9 @@ pub fn is_chunk_adjacent_to(
 }
 
 pub fn get_neighbor_if_(
-  matrix: Matrix,
-  chunk: RowChunk,
-  test: StrTest,
+  matrix: Matrix(a),
+  chunk: RowChunk(a),
+  test: StrTest(a),
 ) -> List(Option(Coord)) {
   let #(y, x) = chunk.1
   let offsets = list.index_map(chunk.0, fn(i, _) { i })
@@ -98,9 +98,9 @@ pub fn get_neighbor_if_(
 }
 
 pub fn get_neighbor_if(
-  matrix: Matrix,
-  chunk: RowChunk,
-  test: StrTest,
+  matrix: Matrix(a),
+  chunk: RowChunk(a),
+  test: StrTest(a),
 ) -> List(Coord) {
   let unique = set.new()
   get_neighbor_if_(matrix, chunk, test)
@@ -109,11 +109,14 @@ pub fn get_neighbor_if(
   |> set.to_list
 }
 
-type RowChunkBuilder {
-  RowChunkBuilder(partial: Option(RowChunk), chunks: List(RowChunk))
+type RowChunkBuilder(a) {
+  RowChunkBuilder(partial: Option(RowChunk(a)), chunks: List(RowChunk(a)))
 }
 
-pub fn find_row_chunks(matrix: Matrix, test_in_chunk: StrTest) -> List(RowChunk) {
+pub fn find_row_chunks(
+  matrix: Matrix(a),
+  test_in_chunk: StrTest(a),
+) -> List(RowChunk(a)) {
   let finalize_partial = fn(partial, chunks) {
     let #(chunk, #(y, x)) = partial
     [#(list.reverse(chunk), #(y, x)), ..chunks]
