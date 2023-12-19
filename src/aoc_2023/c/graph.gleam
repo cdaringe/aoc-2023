@@ -21,7 +21,7 @@ pub type State(key) =
 pub type Node(key) =
   #(key, List(OutEdge(key)))
 
-type Graph(key) =
+pub type Graph(key) =
   Map(key, List(OutEdge(key)))
 
 pub fn dijkstra(graph: Graph(key), start: key, big_number: Int) -> State(key) {
