@@ -63,18 +63,14 @@ pub fn lenses_without_label(lenses: List(Lens), label) {
 
 pub fn lenses_insert(lenses: List(Lens), lens: Lens) {
   let #(next, did_replace) =
-    list.fold_right(
-      lenses,
-      #([], False),
-      fn(acc, it) {
-        let #(acc, did_replace) = acc
-        case it.label == lens.label, did_replace {
-          // case: swap!
-          True, False -> #([lens, ..acc], True)
-          _, _ -> #([it, ..acc], did_replace)
-        }
-      },
-    )
+    list.fold_right(lenses, #([], False), fn(acc, it) {
+      let #(acc, did_replace) = acc
+      case it.label == lens.label, did_replace {
+        // case: swap!
+        True, False -> #([lens, ..acc], True)
+        _, _ -> #([it, ..acc], did_replace)
+      }
+    })
   case did_replace {
     True -> next
     False -> list.concat([next, [lens]])

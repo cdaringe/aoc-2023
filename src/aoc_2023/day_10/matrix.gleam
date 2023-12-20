@@ -19,13 +19,10 @@ pub type Matrix(a) =
   List(List(a))
 
 pub fn of_lines(lines: List(String), parse_cell: fn(String) -> a) -> Matrix(a) {
-  list.map(
-    lines,
-    fn(line) {
-      string.split(line, "")
-      |> list.map(parse_cell)
-    },
-  )
+  list.map(lines, fn(line) {
+    string.split(line, "")
+    |> list.map(parse_cell)
+  })
 }
 
 pub type Coord {
@@ -65,18 +62,15 @@ pub fn find_cell(
   test_fn: fn(a) -> Bool,
 ) -> Result(CoordVal(a), Nil) {
   matrix
-  |> list.index_fold(
-    from: Error(Nil),
-    with: fn(found, row, ry) {
-      use <- bool.guard(when: result.is_ok(found), return: found)
-      use found, val, ri <- list.index_fold(row, Error(Nil))
-      use <- bool.guard(when: result.is_ok(found), return: found)
-      case test_fn(val) {
-        False -> Error(Nil)
-        _ -> Ok(CoordVal(coord: Coord(y: ry, x: ri), val: val))
-      }
-    },
-  )
+  |> list.index_fold(from: Error(Nil), with: fn(found, row, ry) {
+    use <- bool.guard(when: result.is_ok(found), return: found)
+    use found, val, ri <- list.index_fold(row, Error(Nil))
+    use <- bool.guard(when: result.is_ok(found), return: found)
+    case test_fn(val) {
+      False -> Error(Nil)
+      _ -> Ok(CoordVal(coord: Coord(y: ry, x: ri), val: val))
+    }
+  })
 }
 
 // @warn order matters. prefer searching CW first (right, up)
@@ -89,17 +83,13 @@ pub fn fold_adjacent(
   init: b,
   with cb: fn(b, a, Coord) -> b,
 ) -> b {
-  list.fold(
-    adjacency_dirs,
-    init,
-    fn(acc, dir) {
-      let adj_coord = Coord(x: coord.x + dir.0, y: coord.y + dir.1)
-      case get_cell(matrix, adj_coord) {
-        Ok(v) -> cb(acc, v, adj_coord)
-        Error(Nil) -> acc
-      }
-    },
-  )
+  list.fold(adjacency_dirs, init, fn(acc, dir) {
+    let adj_coord = Coord(x: coord.x + dir.0, y: coord.y + dir.1)
+    case get_cell(matrix, adj_coord) {
+      Ok(v) -> cb(acc, v, adj_coord)
+      Error(Nil) -> acc
+    }
+  })
 }
 
 pub fn get_neighbor_if(
@@ -178,22 +168,18 @@ pub fn map_neighbors(
   cb: fn(CoordVal(a), Dir) -> b,
 ) -> Neighbors(b) {
   Neighbors(
-    up: result.map(
-      neighbors.up,
-      fn(v) { CoordVal(coord: v.coord, val: cb(v, Up)) },
-    ),
-    right: result.map(
-      neighbors.right,
-      fn(v) { CoordVal(coord: v.coord, val: cb(v, Right)) },
-    ),
-    down: result.map(
-      neighbors.down,
-      fn(v) { CoordVal(coord: v.coord, val: cb(v, Down)) },
-    ),
-    left: result.map(
-      neighbors.left,
-      fn(v) { CoordVal(coord: v.coord, val: cb(v, Left)) },
-    ),
+    up: result.map(neighbors.up, fn(v) {
+      CoordVal(coord: v.coord, val: cb(v, Up))
+    }),
+    right: result.map(neighbors.right, fn(v) {
+      CoordVal(coord: v.coord, val: cb(v, Right))
+    }),
+    down: result.map(neighbors.down, fn(v) {
+      CoordVal(coord: v.coord, val: cb(v, Down))
+    }),
+    left: result.map(neighbors.left, fn(v) {
+      CoordVal(coord: v.coord, val: cb(v, Left))
+    }),
   )
 }
 
@@ -285,15 +271,12 @@ pub fn fold_neighbors(
   neighbors
   |> neighbors_to_list
   |> list.map(fn(x) { x.0 })
-  |> list.fold(
-    init,
-    fn(acc, cv_result) {
-      case cv_result {
-        Error(_) -> acc
-        Ok(cv) -> cb(acc, cv)
-      }
-    },
-  )
+  |> list.fold(init, fn(acc, cv_result) {
+    case cv_result {
+      Error(_) -> acc
+      Ok(cv) -> cb(acc, cv)
+    }
+  })
 }
 
 pub fn neighbor_to_string(neighbors: Neighbors(a), to_string) -> String {
@@ -304,9 +287,15 @@ pub fn neighbor_to_string(neighbors: Neighbors(a), to_string) -> String {
     }
   }
   [
-    " " <> to_s(neighbors.up) <> " ",
-    to_s(neighbors.left) <> " " <> to_s(neighbors.right),
-    " " <> to_s(neighbors.down) <> " ",
+    " "
+    <> to_s(neighbors.up)
+    <> " ",
+    to_s(neighbors.left)
+    <> " "
+    <> to_s(neighbors.right),
+    " "
+    <> to_s(neighbors.down)
+    <> " ",
   ]
   |> string.join("\n")
 }

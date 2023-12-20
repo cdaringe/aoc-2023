@@ -141,18 +141,15 @@ pub fn tilt(l: List(Spot), leftwards: Bool) -> List(Spot) {
 
 fn load_north(l: List(Spot)) {
   let len = list.length(l)
-  list.index_fold(
-    l,
-    0,
-    fn(total, spot, i) {
-      total + case spot {
-        Round -> {
-          len - i
-        }
-        _ -> 0
+  list.index_fold(l, 0, fn(total, spot, i) {
+    total
+    + case spot {
+      Round -> {
+        len - i
       }
-    },
-  )
+      _ -> 0
+    }
+  })
 }
 
 pub fn rotate_cw(matrix: List(List(a))) -> List(List(a)) {
@@ -181,12 +178,9 @@ pub fn tilt_cycles(matrix: Platform) -> Platform {
 }
 
 pub fn pp_platform(p: Platform) {
-  list.map(
-    p,
-    fn(r) {
-      list.map(r, char_of_spot)
-      |> string.join("")
-    },
-  )
+  list.map(p, fn(r) {
+    list.map(r, char_of_spot)
+    |> string.join("")
+  })
   |> string.join("\n")
 }

@@ -137,11 +137,9 @@ fn parse_hands(text: String, jmode: JMode) -> ParseHandResult {
     |> swap_err(parse_err(chars_str)),
   )
   let desc_counts =
-    list.fold(
-      cards,
-      map.new(),
-      fn(n_by_card, card) { cmap.upsert(n_by_card, card, 1, fn(n) { n + 1 }) },
-    )
+    list.fold(cards, map.new(), fn(n_by_card, card) {
+      cmap.upsert(n_by_card, card, 1, fn(n) { n + 1 })
+    })
     |> map.to_list
     |> list.map(fn(kv) { CC(card: kv.0, count: kv.1) })
     |> list.sort(fn(a, b) { int.compare(b.count, a.count) })

@@ -63,7 +63,8 @@ fn score(card: Card) -> Int {
 }
 
 fn score_ith(ith: Int, cards: List(Card)) {
-  1 + case list.at(cards, ith) {
+  1
+  + case list.at(cards, ith) {
     Ok(card) -> {
       let n = count_matches(card)
       use <- bool.guard(n == 0, 0)

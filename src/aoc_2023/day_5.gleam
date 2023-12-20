@@ -14,10 +14,9 @@ pub fn pt_1(input: String) {
   let seeds = parse_seed_line(l1)
   let maps_by_name: ResourceMapByFT =
     parse_map_lines(rest)
-    |> list.fold(
-      map.new(),
-      fn(acc, rm) { map.insert(acc, #(rm.from, rm.to), rm) },
-    )
+    |> list.fold(map.new(), fn(acc, rm) {
+      map.insert(acc, #(rm.from, rm.to), rm)
+    })
 
   seeds
   |> list.map(fn(s) { loc_of_seed(s, maps_by_name) })
@@ -29,10 +28,9 @@ pub fn pt_2(input: String) {
   let assert Ok(#(l1, rest)) = list.pop(lines, fn(_) { True })
   let maps_by_name: ResourceMapByFT =
     parse_map_lines(rest)
-    |> list.fold(
-      map.new(),
-      fn(acc, rm) { map.insert(acc, #(rm.from, rm.to), rm) },
-    )
+    |> list.fold(map.new(), fn(acc, rm) {
+      map.insert(acc, #(rm.from, rm.to), rm)
+    })
 
   let max =
     map.values(maps_by_name)
@@ -60,17 +58,14 @@ pub fn pt_2(input: String) {
     |> iter.from_list
     |> iter.flatten
   seq
-  |> iter.fold(
-    #(0, 999_999_999_999),
-    fn(acc, seed) {
-      let #(count, min) = acc
-      case int.modulo(count, 1_000_000) {
-        Ok(0) -> Nil
-        _ -> Nil
-      }
-      #(count + 1, int.min(min, loc_of_seed(seed, maps_by_name)))
-    },
-  )
+  |> iter.fold(#(0, 999_999_999_999), fn(acc, seed) {
+    let #(count, min) = acc
+    case int.modulo(count, 1_000_000) {
+      Ok(0) -> Nil
+      _ -> Nil
+    }
+    #(count + 1, int.min(min, loc_of_seed(seed, maps_by_name)))
+  })
   |> fn(x: #(Int, Int)) { x.1 }
 }
 
@@ -91,16 +86,13 @@ fn collect_resources(
 ) -> Int {
   let assert Ok(rm) = map.get(maps_by_name, from_to)
   let value = case
-    list.find_map(
-      rm.ranges,
-      fn(r) {
-        let Range(src, dest, len) = r
-        case value >= src && value < { src + len } {
-          True -> Ok(dest + { value - src })
-          False -> Error(Nil)
-        }
-      },
-    )
+    list.find_map(rm.ranges, fn(r) {
+      let Range(src, dest, len) = r
+      case value >= src && value < { src + len } {
+        True -> Ok(dest + { value - src })
+        False -> Error(Nil)
+      }
+    })
   {
     Ok(v) -> v
     _ -> value
@@ -150,39 +142,36 @@ fn parse_from_to(s: String) {
 
 fn parse_map_lines(lines: List(String)) -> List(ResourceMap) {
   let parsed =
-    list.fold(
-      lines,
-      Builder([], None),
-      fn(b: Builder, line) {
-        case b.partial, string.ends_with(line, ":") {
-          None, False -> panic as "bummer"
-          None, True -> {
-            let #(from, to) = parse_from_to(line)
-            Builder(b.all, Some(ResourceMap(from: from, to: to, ranges: [])))
-          }
-          Some(resource_map), True -> {
-            let #(from, to) = parse_from_to(line)
-            Builder(
-              [resource_map, ..b.all],
-              Some(ResourceMap(from: from, to: to, ranges: [])),
-            )
-          }
-          Some(ResourceMap(from: from, to: to, ranges: ranges)), False -> {
-            let assert [dest, src, len] =
-              string.split(line, " ")
-              |> list.map(cint.parse_int_exn)
-            Builder(
-              b.all,
-              Some(ResourceMap(
-                from: from,
-                to: to,
-                ranges: [Range(src, dest, len), ..ranges],
-              )),
-            )
-          }
+    list.fold(lines, Builder([], None), fn(b: Builder, line) {
+      case b.partial, string.ends_with(line, ":") {
+        None, False -> panic as "bummer"
+        None, True -> {
+          let #(from, to) = parse_from_to(line)
+          Builder(b.all, Some(ResourceMap(from: from, to: to, ranges: [])))
         }
-      },
-    )
+        Some(resource_map), True -> {
+          let #(from, to) = parse_from_to(line)
+          Builder(
+            [resource_map, ..b.all],
+            Some(ResourceMap(from: from, to: to, ranges: [])),
+          )
+        }
+        Some(ResourceMap(from: from, to: to, ranges: ranges)), False -> {
+          let assert [dest, src, len] =
+            string.split(line, " ")
+            |> list.map(cint.parse_int_exn)
+          Builder(
+            b.all,
+            Some(
+              ResourceMap(from: from, to: to, ranges: [
+                Range(src, dest, len),
+                ..ranges
+              ]),
+            ),
+          )
+        }
+      }
+    })
   let assert Some(final) = parsed.partial
   [final, ..parsed.all]
   |> list.reverse

@@ -55,10 +55,10 @@ pub fn sum_visit_all_rows(
   visited: map.Map(SpringRow, Int),
 ) -> VisitState {
   let previous = map.get(visited, row)
-  use <- bool.guard(
-    result.is_ok(previous),
-    #(result.unwrap(previous, 0), visited),
-  )
+  use <- bool.guard(result.is_ok(previous), #(
+    result.unwrap(previous, 0),
+    visited,
+  ))
   case row.springs, row.pattern {
     // case: springs consumed, perfect match
     "", [] -> #(1, visited)

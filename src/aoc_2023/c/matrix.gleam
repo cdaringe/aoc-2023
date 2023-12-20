@@ -19,13 +19,10 @@ pub fn of_lines(lines: List(String)) -> Matrix(String) {
 }
 
 pub fn print(m: Matrix(a), pp) {
-  list.each(
-    m,
-    fn(row) {
-      list.each(row, fn(c) { io.print(pp(c) <> " ") })
-      io.println("")
-    },
-  )
+  list.each(m, fn(row) {
+    list.each(row, fn(c) { io.print(pp(c) <> " ") })
+    io.println("")
+  })
 }
 
 type Coord =
@@ -122,42 +119,39 @@ pub fn find_row_chunks(
     let #(chunk, #(y, x)) = partial
     [#(list.reverse(chunk), #(y, x)), ..chunks]
   }
-  list.index_map(
-    matrix,
-    fn(y, row) {
-      let state =
-        list.index_fold(
-          row,
-          RowChunkBuilder(partial: None, chunks: []),
-          fn(builder, c, x) {
-            case builder.partial, test_in_chunk(c) {
-              None, False -> RowChunkBuilder(None, builder.chunks)
-              None, True ->
-                RowChunkBuilder(
-                  partial: Some(#([c], #(y, x))),
-                  chunks: builder.chunks,
-                )
-              Some(partial), False -> {
-                RowChunkBuilder(
-                  partial: None,
-                  chunks: finalize_partial(partial, builder.chunks),
-                )
-              }
-              Some(#(rest, #(y, x))), True ->
-                RowChunkBuilder(
-                  partial: Some(#([c, ..rest], #(y, x))),
-                  chunks: builder.chunks,
-                )
-            }
-          },
-        )
-      case state.partial {
-        Some(partial) -> finalize_partial(partial, state.chunks)
-        _ -> state.chunks
-      }
-      |> list.reverse
-    },
-  )
+  list.index_map(matrix, fn(y, row) {
+    let state =
+      list.index_fold(row, RowChunkBuilder(partial: None, chunks: []), fn(
+        builder,
+        c,
+        x,
+      ) {
+        case builder.partial, test_in_chunk(c) {
+          None, False -> RowChunkBuilder(None, builder.chunks)
+          None, True ->
+            RowChunkBuilder(
+              partial: Some(#([c], #(y, x))),
+              chunks: builder.chunks,
+            )
+          Some(partial), False -> {
+            RowChunkBuilder(
+              partial: None,
+              chunks: finalize_partial(partial, builder.chunks),
+            )
+          }
+          Some(#(rest, #(y, x))), True ->
+            RowChunkBuilder(
+              partial: Some(#([c, ..rest], #(y, x))),
+              chunks: builder.chunks,
+            )
+        }
+      })
+    case state.partial {
+      Some(partial) -> finalize_partial(partial, state.chunks)
+      _ -> state.chunks
+    }
+    |> list.reverse
+  })
   |> list.flatten
 }
 
@@ -190,21 +184,17 @@ pub fn at_exn(mat: Matrix(a), y: Int, x: Int) {
 }
 
 pub fn of_list(l: List(a), width: Int) -> Matrix(a) {
-  list.fold_right(
-    l,
-    [[]],
-    fn(acc, it) {
-      case acc {
-        [hd, ..rest] -> {
-          case list.length(hd) == width {
-            True -> [[it], ..acc]
-            False -> [[it, ..hd], ..rest]
-          }
+  list.fold_right(l, [[]], fn(acc, it) {
+    case acc {
+      [hd, ..rest] -> {
+        case list.length(hd) == width {
+          True -> [[it], ..acc]
+          False -> [[it, ..hd], ..rest]
         }
-        _ -> panic
       }
-    },
-  )
+      _ -> panic
+    }
+  })
 }
 
 type YX =

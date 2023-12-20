@@ -27,11 +27,9 @@ pub type Graph(key) =
 pub fn dijkstra(graph: Graph(key), start: key, big_number: Int) -> State(key) {
   let visited = set.new()
   let state =
-    map.fold(
-      graph,
-      map.new(),
-      fn(next, key, _) { map.insert(next, key, #(start, big_number)) },
-    )
+    map.fold(graph, map.new(), fn(next, key, _) {
+      map.insert(next, key, #(start, big_number))
+    })
   let state = map.insert(state, start, #(start, 0))
   let assert Ok(edges) = map.get(graph, start)
   dijkstra_visit(graph, state, visited, #(start, edges), big_number)
@@ -61,10 +59,10 @@ fn dijkstra_visit(
           False -> #(min_unvis_distance, min_unvis_distance_key)
         }
         let assert Ok(#(_, current_min_distance)) = map.get(state, to)
-        use <- bool.guard(
-          next_distance > current_min_distance,
-          #(state, next_min),
-        )
+        use <- bool.guard(next_distance > current_min_distance, #(
+          state,
+          next_min,
+        ))
         let next_state = map.insert(state, to, #(key, next_distance))
         #(next_state, next_min)
       },
@@ -75,19 +73,15 @@ fn dijkstra_visit(
     case next_node_key == key {
       False -> next_node_key
       True ->
-        map.fold(
-          state,
-          #(key, big_number),
-          fn(min_unvisted, itk, itv) {
-            let #(_, curr_min_dist) = min_unvisted
-            use <- bool.guard(set.contains(visited, itk), min_unvisted)
-            let #(_, from_dist) = itv
-            case from_dist < curr_min_dist {
-              True -> itv
-              _ -> min_unvisted
-            }
-          },
-        ).0
+        map.fold(state, #(key, big_number), fn(min_unvisted, itk, itv) {
+          let #(_, curr_min_dist) = min_unvisted
+          use <- bool.guard(set.contains(visited, itk), min_unvisted)
+          let #(_, from_dist) = itv
+          case from_dist < curr_min_dist {
+            True -> itv
+            _ -> min_unvisted
+          }
+        }).0
     }
   }
   let assert Ok(edges) = map.get(graph, next_node_key)

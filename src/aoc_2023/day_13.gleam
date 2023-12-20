@@ -19,18 +19,14 @@ pub fn pt_2(input: String) {
 }
 
 fn score_reflections(reflections) -> Int {
-  list.fold(
-    reflections,
-    #(0, 0),
-    fn(acc, reflections) {
-      let #(rows, cols) = acc
-      case reflections {
-        [Col(c)] -> #(rows, cols + c)
-        [Row(r)] -> #(rows + r, cols)
-        _ -> panic
-      }
-    },
-  )
+  list.fold(reflections, #(0, 0), fn(acc, reflections) {
+    let #(rows, cols) = acc
+    case reflections {
+      [Col(c)] -> #(rows, cols + c)
+      [Row(r)] -> #(rows + r, cols)
+      _ -> panic
+    }
+  })
   |> fn(rc: #(Int, Int)) { rc.1 + { 100 * rc.0 } }
 }
 
@@ -87,13 +83,10 @@ pub fn has_reflection_string_at(chars: List(String), i: Int) -> Bool {
 }
 
 fn col(matrix: List(List(a)), ith: Int) -> List(a) {
-  list.map(
-    matrix,
-    fn(row) {
-      let assert Ok(cell) = list.at(row, ith)
-      cell
-    },
-  )
+  list.map(matrix, fn(row) {
+    let assert Ok(cell) = list.at(row, ith)
+    cell
+  })
 }
 
 pub fn cols(matrix: List(List(a))) -> List(List(a)) {
@@ -146,21 +139,17 @@ fn smudge_char(char) {
 
 fn find_smudged_reflection(mirror_maze) {
   let assert [reflection] = find_reflections(mirror_maze)
-  map_matrix(
-    mirror_maze,
-    fn(mat, yx) { swap_at(over: mat, at: yx, with: smudge_char) },
-  )
-  |> iter.fold_until(
-    [],
-    fn(_, smudged) {
-      case
-        find_reflections(smudged)
-        |> list.filter(fn(r) { r != reflection })
-      {
-        [] -> list.Continue([])
-        [x] -> list.Stop([x])
-        _ -> panic
-      }
-    },
-  )
+  map_matrix(mirror_maze, fn(mat, yx) {
+    swap_at(over: mat, at: yx, with: smudge_char)
+  })
+  |> iter.fold_until([], fn(_, smudged) {
+    case
+      find_reflections(smudged)
+      |> list.filter(fn(r) { r != reflection })
+    {
+      [] -> list.Continue([])
+      [x] -> list.Stop([x])
+      _ -> panic
+    }
+  })
 }

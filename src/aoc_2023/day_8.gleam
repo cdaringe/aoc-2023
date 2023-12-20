@@ -14,17 +14,17 @@ pub fn pt_1(input: String) {
   let #(dirs, _, network) = parse(input)
   from_list(dirs)
   |> cycle
-  |> fold_until(
-    from: State(n: 0, node: net.get_node(network, "AAA")),
-    with: fn(state, dir) {
-      let next_node = net.get_node(network, net.nav(state.node, dir))
-      let next_state = State(n: state.n + 1, node: next_node)
-      case next_node.name {
-        "ZZZ" -> list.Stop(next_state)
-        _ -> list.Continue(next_state)
-      }
-    },
-  )
+  |> fold_until(from: State(n: 0, node: net.get_node(network, "AAA")), with: fn(
+    state,
+    dir,
+  ) {
+    let next_node = net.get_node(network, net.nav(state.node, dir))
+    let next_state = State(n: state.n + 1, node: next_node)
+    case next_node.name {
+      "ZZZ" -> list.Stop(next_state)
+      _ -> list.Continue(next_state)
+    }
+  })
   |> fn(state: State) { state.n }
 }
 
@@ -36,17 +36,14 @@ pub fn pt_2(input: String) {
     |> list.map(fn(node) {
       from_list(dirs)
       |> cycle
-      |> fold_until(
-        from: State(n: 0, node: node),
-        with: fn(state, dir) {
-          let next_node = net.get_node(network, net.nav(state.node, dir))
-          let next_state = State(n: state.n + 1, node: next_node)
-          case string.ends_with(next_node.name, "Z") {
-            True -> list.Stop(next_state)
-            _ -> list.Continue(next_state)
-          }
-        },
-      )
+      |> fold_until(from: State(n: 0, node: node), with: fn(state, dir) {
+        let next_node = net.get_node(network, net.nav(state.node, dir))
+        let next_state = State(n: state.n + 1, node: next_node)
+        case string.ends_with(next_node.name, "Z") {
+          True -> list.Stop(next_state)
+          _ -> list.Continue(next_state)
+        }
+      })
       |> fn(state: State) { state.n }
     })
   list.fold(tail, hd, fn(lcm, it) { arithmetics.lcm(lcm, it) })

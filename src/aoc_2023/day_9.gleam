@@ -55,14 +55,11 @@ fn delta_heads(xxs: List(List(Int))) {
   xxs
   |> list.map(clist.first_exn)
   |> list.reverse
-  |> list.fold(
-    [],
-    fn(acc, it) {
-      let last = case acc {
-        [] -> 0
-        [last, ..] -> last
-      }
-      [it - last, ..acc]
-    },
-  )
+  |> list.fold([], fn(acc, it) {
+    let last = case acc {
+      [] -> 0
+      [last, ..] -> last
+    }
+    [it - last, ..acc]
+  })
 }

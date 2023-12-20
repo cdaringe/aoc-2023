@@ -65,17 +65,14 @@ fn draw_of_string(draw_text) -> Draw {
   draw_text
   |> string.split(",")
   |> list.map(parse_color_count_text)
-  |> list.fold(
-    #(0, 0, 0),
-    fn(acc, it) {
-      let #(r, g, b) = acc
-      case it.1 {
-        R -> #(r + it.0, g, b)
-        G -> #(r, g + it.0, b)
-        B -> #(r, g, b + it.0)
-      }
-    },
-  )
+  |> list.fold(#(0, 0, 0), fn(acc, it) {
+    let #(r, g, b) = acc
+    case it.1 {
+      R -> #(r + it.0, g, b)
+      G -> #(r, g + it.0, b)
+      B -> #(r, g, b + it.0)
+    }
+  })
 }
 
 fn game_of_line(line: String) -> Game {
@@ -101,12 +98,8 @@ fn check_valid_draw(draw: Draw) {
 
 fn power(game: Game) -> Int {
   let #(r, g, b) =
-    list.fold(
-      game.draws,
-      #(0, 0, 0),
-      fn(min, draw) {
-        #(max(min.0, draw.0), max(min.1, draw.1), max(min.2, draw.2))
-      },
-    )
+    list.fold(game.draws, #(0, 0, 0), fn(min, draw) {
+      #(max(min.0, draw.0), max(min.1, draw.1), max(min.2, draw.2))
+    })
   r * g * b
 }

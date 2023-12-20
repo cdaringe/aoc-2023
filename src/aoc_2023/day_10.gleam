@@ -81,17 +81,14 @@ fn parse(input: String) -> PipeGrid {
 }
 
 fn nav(m: PipeGrid, last: CVP, current: CVP) -> CVP {
-  matrix.get_neighbor_if(
-    m,
-    current.coord,
-    fn(neighb: CVP) {
-      use <- bool.guard(
-        when: last.coord.x == neighb.coord.x && last.coord.y == neighb.coord.y,
-        return: False,
-      )
-      can_connect(current, neighb)
-    },
-  )
+  matrix.get_neighbor_if(m, current.coord, fn(neighb: CVP) {
+    use <- bool.guard(
+      when: last.coord.x == neighb.coord.x
+      && last.coord.y == neighb.coord.y,
+      return: False,
+    )
+    can_connect(current, neighb)
+  })
   |> common.expect("no neighbor found")
 }
 
@@ -99,21 +96,18 @@ fn build_loop(matrix: PipeGrid, start: CVP) -> List(CVP) {
   let loopl =
     iterator.from_list([1])
     |> iterator.cycle
-    |> iterator.fold_until(
-      from: [start],
-      with: fn(cvps: List(CVP), _) {
-        let #(curr, last) = case cvps {
-          [] -> panic as "bummer"
-          [x] -> #(x, x)
-          [x, y, ..] -> #(x, y)
-        }
-        let next = nav(matrix, last, curr)
-        case next.val {
-          Start -> list.Stop(cvps)
-          _ -> list.Continue([next, ..cvps])
-        }
-      },
-    )
+    |> iterator.fold_until(from: [start], with: fn(cvps: List(CVP), _) {
+      let #(curr, last) = case cvps {
+        [] -> panic as "bummer"
+        [x] -> #(x, x)
+        [x, y, ..] -> #(x, y)
+      }
+      let next = nav(matrix, last, curr)
+      case next.val {
+        Start -> list.Stop(cvps)
+        _ -> list.Continue([next, ..cvps])
+      }
+    })
   loopl
 }
 
@@ -180,15 +174,12 @@ fn parse_pipe(it: String) -> Pipe {
 }
 
 fn unused_pipes_to_holes(grid: PipeGrid, loop_coords_set) -> PipeGrid {
-  matrix.map(
-    grid,
-    fn(cv) {
-      case set.contains(loop_coords_set, cv.coord) {
-        True -> cv.val
-        False -> Hole
-      }
-    },
-  )
+  matrix.map(grid, fn(cv) {
+    case set.contains(loop_coords_set, cv.coord) {
+      True -> cv.val
+      False -> Hole
+    }
+  })
 }
 
 //
@@ -250,16 +241,12 @@ fn to_envpipe_loop(
   [
     envpipe0,
     ..{
-      list.fold(
-        rest,
-        state,
-        fn(state, cv) {
-          let #(all, last) = state
-          let env = permute_env_cw(last, cv)
-          let envpipe = EnvPipe(cv: cv, env: env)
-          #([envpipe, ..all], envpipe)
-        },
-      )
+      list.fold(rest, state, fn(state, cv) {
+        let #(all, last) = state
+        let env = permute_env_cw(last, cv)
+        let envpipe = EnvPipe(cv: cv, env: env)
+        #([envpipe, ..all], envpipe)
+      })
       |> pair.first
       |> list.reverse
     }
@@ -456,14 +443,13 @@ pub fn flood_fill_out(
       case val {
         Hole -> {
           let next_classifed = map.insert(classified, coord, MOut)
-          matrix.fold_adjacent(
-            grid,
-            coord,
+          matrix.fold_adjacent(grid, coord, next_classifed, fn(
             next_classifed,
-            fn(next_classifed, _pipe, next_coord) {
-              flood_fill_out(grid, next_coord, next_classifed)
-            },
-          )
+            _pipe,
+            next_coord,
+          ) {
+            flood_fill_out(grid, next_coord, next_classifed)
+          })
         }
         _ -> map.insert(classified, coord, MPipe)
       }
@@ -475,31 +461,24 @@ pub fn flood_fill_out(
 pub fn flood_fill_out_all(grid: PipeGrid, envpipes: List(EnvPipe)) {
   use classified, envpipe <- list.fold(envpipes, map.new())
   io.debug(#("ffoa", envpipe.cv.val, env_to_string(envpipe.env)))
-  fold_envpipe(
-    envpipe,
-    classified,
-    fn(classified, _envpipe, coord, air, _) {
-      case air {
-        Out -> flood_fill_out(grid, coord, classified)
-        _ -> classified
-      }
-    },
-  )
+  fold_envpipe(envpipe, classified, fn(classified, _envpipe, coord, air, _) {
+    case air {
+      Out -> flood_fill_out(grid, coord, classified)
+      _ -> classified
+    }
+  })
 }
 
 fn unfilled_as_in(
   grid: PipeGrid,
   classified: MaskByCoord,
 ) -> matrix.Matrix(Mask) {
-  matrix.map(
-    grid,
-    fn(cv) {
-      case map.get(classified, cv.coord) {
-        Ok(kind) -> kind
-        Error(Nil) -> MIn
-      }
-    },
-  )
+  matrix.map(grid, fn(cv) {
+    case map.get(classified, cv.coord) {
+      Ok(kind) -> kind
+      Error(Nil) -> MIn
+    }
+  })
 }
 
 // pub fn to_air_islands(grid: PipeGrid, loop_coords_set, pipenv_loop) {
@@ -522,13 +501,10 @@ fn env_as_list(env: Env) {
 fn fold_env(env: Env, init: a, with cb: fn(a, Air, Dir) -> a) -> a {
   env
   |> env_as_list
-  |> list.fold(
-    init,
-    fn(acc, it) {
-      let #(air, dir) = it
-      cb(acc, air, dir)
-    },
-  )
+  |> list.fold(init, fn(acc, it) {
+    let #(air, dir) = it
+    cb(acc, air, dir)
+  })
 }
 
 fn env_ccw(env: Env) {
@@ -547,25 +523,17 @@ fn fold_envpipe(
   let EnvPipe(cv: epcv, env: env) = envpipe
   env
   |> env_as_list
-  |> list.fold(
-    init,
-    fn(acc, it) {
-      let #(air, dir) = it
-      let #(dx, dy) = case dir {
-        Up -> #(0, -1)
-        Down -> #(0, 1)
-        Left -> #(-1, 0)
-        Right -> #(0, 1)
-      }
-      cb(
-        acc,
-        envpipe,
-        Coord(x: epcv.coord.x + dx, y: epcv.coord.y + dy),
-        air,
-        dir,
-      )
-    },
-  )
+  |> list.fold(init, fn(acc, it) {
+    let #(air, dir) = it
+    let #(dx, dy) = case dir {
+      Up -> #(0, -1)
+      Down -> #(0, 1)
+      Left -> #(-1, 0)
+      Right -> #(0, 1)
+    }
+    cb(acc, envpipe, Coord(x: epcv.coord.x + dx, y: epcv.coord.y + dy), air, dir,
+    )
+  })
 }
 
 fn dir_to_string(dir: Dir) {
@@ -578,12 +546,8 @@ fn dir_to_string(dir: Dir) {
 }
 
 fn env_to_string(env: Env) {
-  fold_env(
-    env,
-    [],
-    fn(acc, air, dir) {
-      [dir_to_string(dir) <> " " <> air_to_string(air), ..acc]
-    },
-  )
+  fold_env(env, [], fn(acc, air, dir) {
+    [dir_to_string(dir) <> " " <> air_to_string(air), ..acc]
+  })
   |> string.join(", ")
 }
