@@ -1,12 +1,9 @@
 import gleam/list
-import gleam/option.{type Option}
 import gleam/string
 import gleam/result
 import gleam/io
 import gleam/bool
-import gleam/int
-import gleam/set
-import aoc_2023/c/list.{find_map_index} as clist
+import aoc_2023/c/list.{find_map_index} as _clist
 
 pub type Dir {
   Up

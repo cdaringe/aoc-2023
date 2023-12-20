@@ -61,14 +61,14 @@ const adjacency_dirs = [
 pub fn is_chunk_adjacent_to(
   matrix: Matrix(a),
   chunk: RowChunk(a),
-  test: StrTest(a),
+  cb: StrTest(a),
 ) -> Bool {
   let #(y, x) = chunk.1
   use dxx <- list.any(list.index_map(chunk.0, fn(i, _) { i }))
   use dir <- list.any(adjacency_dirs)
   let #(dy, dx) = dir
   case get_cell(matrix, #(y + dy, x + dx + dxx)) {
-    Some(neighbor) -> test(neighbor)
+    Some(neighbor) -> cb(neighbor)
     _ -> False
   }
 }
@@ -76,7 +76,7 @@ pub fn is_chunk_adjacent_to(
 pub fn get_neighbor_if_(
   matrix: Matrix(a),
   chunk: RowChunk(a),
-  test: StrTest(a),
+  cb: StrTest(a),
 ) -> List(Option(Coord)) {
   let #(y, x) = chunk.1
   let offsets = list.index_map(chunk.0, fn(i, _) { i })
@@ -86,7 +86,7 @@ pub fn get_neighbor_if_(
   let yx: Coord = #(y + dy, x + dx + dxx)
   case get_cell(matrix, yx) {
     Some(neighbor) -> {
-      case test(neighbor) {
+      case cb(neighbor) {
         True -> Some(yx)
         _ -> None
       }
@@ -98,10 +98,10 @@ pub fn get_neighbor_if_(
 pub fn get_neighbor_if(
   matrix: Matrix(a),
   chunk: RowChunk(a),
-  test: StrTest(a),
+  cb: StrTest(a),
 ) -> List(Coord) {
   let unique = set.new()
-  get_neighbor_if_(matrix, chunk, test)
+  get_neighbor_if_(matrix, chunk, cb)
   |> list.filter_map(fn(x) { option.to_result(x, "bummer") })
   |> list.fold(unique, fn(acc, it) { set.insert(acc, it) })
   |> set.to_list

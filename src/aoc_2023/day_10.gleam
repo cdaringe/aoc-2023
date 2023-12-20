@@ -187,9 +187,9 @@ fn unused_pipes_to_holes(grid: PipeGrid, loop_coords_set) -> PipeGrid {
 // in the input all of the time
 //
 fn to_envpipe_loop(
-  grid: PipeGrid,
+  _grid: PipeGrid,
   loop: List(CVP),
-  loop_coords_set,
+  _loop_coords_set,
 ) -> List(EnvPipe) {
   io.debug(#("warn S must be in TL corner"))
   // let cv0: CVP = matrix.find_exn(grid, fn(cv) { set.contains(loop_coords_set, cv.coord) })
@@ -274,30 +274,30 @@ fn air_to_string(air: Air) {
   }
 }
 
-fn air_of_dir(env: Env, dir: Dir) -> Air {
-  case dir {
-    Up -> env.u
-    Down -> env.d
-    Right -> env.r
-    Left -> env.l
-  }
-}
+// fn air_of_dir(env: Env, dir: Dir) -> Air {
+//   case dir {
+//     Up -> env.u
+//     Down -> env.d
+//     Right -> env.r
+//     Left -> env.l
+//   }
+// }
 
-fn is_collinear(a, b) {
-  case a, b {
-    Up, Up -> True
-    Up, Down -> True
-    Down, Down -> True
-    Down, Up -> True
+// fn is_collinear(a, b) {
+//   case a, b {
+//     Up, Up -> True
+//     Up, Down -> True
+//     Down, Down -> True
+//     Down, Up -> True
 
-    Left, Left -> True
-    Left, Right -> True
-    Right, Right -> True
-    Right, Left -> True
+//     Left, Left -> True
+//     Left, Right -> True
+//     Right, Right -> True
+//     Right, Left -> True
 
-    _, _ -> False
-  }
-}
+//     _, _ -> False
+//   }
+// }
 
 fn permute_env_cw(last: EnvPipe, cv: CVP) -> Env {
   let dir = get_dir(last.cv, cv)
@@ -387,32 +387,32 @@ fn permute_env_cw(last: EnvPipe, cv: CVP) -> Env {
 //   final_env
 // }
 
-type Rot {
-  CCW
-  CW
-  Pin
-}
+// type Rot {
+//   CCW
+//   CW
+//   Pin
+// }
 
 fn empty_env() {
   Env(u: Unk, r: Unk, d: Unk, l: Unk)
 }
 
-fn empty_envpipe(cv: CVP) {
-  EnvPipe(cv: cv, env: empty_env())
-}
+// fn empty_envpipe(cv: CVP) {
+//   EnvPipe(cv: cv, env: empty_env())
+// }
 
-fn pipe_to_string(pipe: Pipe) {
-  case pipe {
-    HBar -> "-"
-    VBar -> "|"
-    TR -> "7"
-    TL -> "F"
-    BL -> "L"
-    BR -> "J"
-    Start -> "S"
-    Hole -> "."
-  }
-}
+// fn pipe_to_string(pipe: Pipe) {
+//   case pipe {
+//     HBar -> "-"
+//     VBar -> "|"
+//     TR -> "7"
+//     TL -> "F"
+//     BL -> "L"
+//     BR -> "J"
+//     Start -> "S"
+//     Hole -> "."
+//   }
+// }
 
 pub type Mask {
   MOut
@@ -505,14 +505,6 @@ fn fold_env(env: Env, init: a, with cb: fn(a, Air, Dir) -> a) -> a {
     let #(air, dir) = it
     cb(acc, air, dir)
   })
-}
-
-fn env_ccw(env: Env) {
-  Env(u: env.r, r: env.d, d: env.l, l: env.u)
-}
-
-fn env_cw(env: Env) {
-  Env(u: env.l, r: env.u, d: env.r, l: env.d)
 }
 
 fn fold_envpipe(
